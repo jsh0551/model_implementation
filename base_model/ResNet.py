@@ -97,8 +97,7 @@ class ResNet(nn.Module):
         x = self.conv_layer5(x)
         x = self.avgpool(x)
         x = self.fcn(x)
-        logit = F.softmax(x,dim=1).view(-1,self.num_classes)
-        pred = torch.argmax(logit,dim=1)
+        pred = F.softmax(x,dim=1).view(-1,self.num_classes)
         return pred
 
     def how_to_use(self):
