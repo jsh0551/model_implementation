@@ -1,1 +1,6 @@
-data/
+.data
+.paper_venv
+가상환경
+base_model/__pycache__
+.ipynb_checkpoints
+object_detection
