@@ -1,4 +1,3 @@
-from turtle import forward
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
@@ -10,7 +9,7 @@ class CNN_layer(nn.Module):
                            nn.BatchNorm2d(out_channel),
                            nn.ReLU()]
         blocks = []
-        for _ in range(num_layers):
+        for _ in range(num_layers-1):
             blocks.append(nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1))
             blocks.append(nn.BatchNorm2d(out_channel))
             blocks.append(nn.ReLU())
@@ -24,7 +23,6 @@ class VGG_Architecture(nn.Module):
         super(VGG_Architecture,self).__init__()
         self.nums_layers = nums_layers
         self.num_classes = num_classes
-        print(self.nums_layers,self.nums_layers[0])
         self.layer1 = CNN_layer(3, 64, self.nums_layers[0])
         self.Max1 = nn.MaxPool2d(2,2, ceil_mode=True)
         self.layer2 = CNN_layer(64, 128, self.nums_layers[1])
@@ -35,14 +33,15 @@ class VGG_Architecture(nn.Module):
         self.Max4 = nn.MaxPool2d(2,2, ceil_mode=True)
         self.layer5 = CNN_layer(512,512,self.nums_layers[4])
         self.Max5 = nn.MaxPool2d(2,2, ceil_mode=True)
+
         self.fc = nn.Sequential(nn.Flatten(),
                                 nn.Linear(7*7*512,4096),
                                 nn.ReLU(),
                                 nn.Linear(4096,4096),
                                 nn.ReLU(),
                                 nn.Linear(4096,self.num_classes))
-
     def forward(self,x):
+        
         x = self.layer1(x)
         x = self.Max1(x)
         x = self.layer2(x)
