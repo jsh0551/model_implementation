@@ -33,9 +33,9 @@ class VGG_Architecture(nn.Module):
         self.Max5 = nn.MaxPool2d(2,2, ceil_mode=True)
 
         self.fc = nn.Sequential(nn.Flatten(),
-                                nn.Dropout(p=0.2),
                                 nn.Linear(7*7*512,4096),
                                 nn.ReLU(),
+                                nn.Dropout(p=0.2),
                                 nn.Linear(4096,4096),
                                 nn.ReLU(),
                                 nn.Linear(4096,self.num_classes))
