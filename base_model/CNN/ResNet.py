@@ -14,16 +14,21 @@ class block(nn.Module):
         self.scale = out_channel//in_channel
         if not bottle_neck:
             self.block = nn.Sequential(nn.Conv2d(in_channel, out_channel, kernel_size=3, stride=start_stride, padding=1),
+                        nn.BatchNorm2d(out_channel),
                         nn.ReLU(),
                         nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1),
+                        nn.BatchNorm2d(out_channel),
                         nn.ReLU())
                         
         else: # bottle neck block
             self.block = nn.Sequential(nn.Conv2d(self.scale*out_channel, out_channel, kernel_size=1, stride=start_stride),
+                        nn.BatchNorm2d(out_channel),
                         nn.ReLU(),
                         nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1),
+                        nn.BatchNorm2d(out_channel),
                         nn.ReLU(),
                         nn.Conv2d(out_channel, 4*out_channel, kernel_size=1),
+                        nn.BatchNorm2d(4*out_channel),
                         nn.ReLU()
                         )
                         
@@ -93,8 +98,9 @@ class ResNet(nn.Module):
         x = self.dropout(x)
         x = self.avgpool(x)
         x = self.fcn(x)
-        pred = F.softmax(x,dim=1).view(-1,self.num_classes)
-        return pred
+        x = x.view(-1,self.num_classes)
+        # pred = F.softmax(x,dim=1).view(-1,self.num_classes)
+        return x
 
     def how_to_use(self):
         print("ResNet(num_layers, num_blocks, num_classes, bottle_neck)\n")

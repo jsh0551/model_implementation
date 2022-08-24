@@ -6,10 +6,12 @@ class CNN_layer(nn.Module):
     def __init__(self, in_channel, out_channel, num_layers):
         super().__init__()
         start_block = [nn.Conv2d(in_channel, out_channel, kernel_size=3, padding=1),
+                       nn.BatchNorm2d(out_channel),
                            nn.ReLU()]
         blocks = []
         for _ in range(num_layers-1):
             blocks.append(nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1))
+            blocks.append(nn.BatchNorm2d(out_channel))
             blocks.append(nn.ReLU())
         self.blocks = nn.Sequential(*(start_block + blocks))
     def forward(self,x):
@@ -35,7 +37,7 @@ class VGG_Architecture(nn.Module):
         self.fc = nn.Sequential(nn.Flatten(),
                                 nn.Linear(7*7*512,4096),
                                 nn.ReLU(),
-                                nn.Dropout(p=0.2),
+                                # nn.Dropout(p=0.2),
                                 nn.Linear(4096,4096),
                                 nn.ReLU(),
                                 nn.Linear(4096,self.num_classes))
@@ -52,9 +54,9 @@ class VGG_Architecture(nn.Module):
         x = self.layer5(x)
         x = self.Max5(x)
         x = self.fc(x)
-        output = F.softmax(x)
+        # output = F.softmax(x)
 
-        return output
+        return x
 
 class VGGNet(nn.Module):
     def __init__(self, num_classes=10, num_layers=16):
