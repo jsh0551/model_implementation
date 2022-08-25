@@ -1,8 +1,9 @@
+from email.policy import default
 import torchvision
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from SSD.utils import get_default_boxes, xy_from_cxcy, find_IoU, encoding_from_cxcy
+from SSD.utils import get_default_boxes, xy_from_cxcy, find_IoU, encoding_from_cxcy, convert_to_ratio
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
@@ -21,7 +22,7 @@ class SSD_Loss(nn.Module):
         num_classes = predicted_scores.size(2)
         default_boxes_xy = xy_from_cxcy(self.default_boxes)
         num_default_boxes = self.default_boxes.size(0)
-
+        target_boxes = convert_to_ratio(boxes=target_boxes)
     
         true_bboxes = torch.zeros((batch_size,num_default_boxes,4),dtype=torch.float).to(device)
         true_labels = torch.zeros((batch_size,num_default_boxes),dtype=torch.long).to(device)
@@ -32,20 +33,18 @@ class SSD_Loss(nn.Module):
 
             boxes_xy = xy_from_cxcy(boxes)
             overlap = find_IoU(boxes_xy, default_boxes_xy)
-
             boxes_with_obj, obj_idx = overlap.max(0)
             _, box_idx = overlap.max(1)
             obj_idx[box_idx] = torch.arange(overlap.size(0)).long().to(device)
 
             check_threshold = boxes_with_obj > self.threshold
-
             true_labels[i][check_threshold] = labels[obj_idx[check_threshold]]
             true_bboxes[i][check_threshold] = boxes[obj_idx[check_threshold]]
             true_bboxes[i] = encoding_from_cxcy(true_bboxes[i], self.default_boxes)
 
         positive = true_labels != 0
         num_hard_neg = (positive.sum(dim=1)*self.hard_negative_ratio).view(-1,1)
-
+    
         # localization loss
         bbox_loss = self.smoothl1_loss(predicted_boxes[positive], true_bboxes[positive])
 

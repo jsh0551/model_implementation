@@ -10,7 +10,7 @@ class CNN_layer(nn.Module):
                            nn.ReLU()]
         blocks = []
         for _ in range(num_layers-1):
-            blocks.append(nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1))
+            blocks.append(nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1)),
             blocks.append(nn.ReLU())
         self.blocks = nn.Sequential(*(start_block + blocks))
     def forward(self,x):
@@ -20,7 +20,8 @@ class SSD_CNN_layer(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size, stride=1, padding=0, dilation=1):
         super().__init__()
         self.extra_layer = nn.Sequential(nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding, dilation=dilation),
-                           nn.ReLU())
+                                         nn.BatchNorm2d(out_channel),
+                                         nn.ReLU())
     def forward(self,x):
         return self.extra_layer(x)
 

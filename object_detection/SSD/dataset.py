@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Dataset
 import cv2
 import numpy as np
+import albumentations as A
+
 
 class SSD_Dataset(Dataset):
     def __init__(self, json_file, path = '../.data/', train = True, transform=None):
@@ -15,36 +17,43 @@ class SSD_Dataset(Dataset):
         else:
             self.path = path + 'val/'
 
-        self.transform = transform
+        if transform:
+            self.transform = transform
+        else:
+            self.transform = A.Compose([A.Resize(300,300),A.Normalize(mean=0.5, std=0.5)],
+                                   bbox_params=A.BboxParams(format='coco' ,label_fields=['labels']))
         self.image_dict = dict()
         for img_info in json_file['images']:
             self.image_dict[img_info['id']] = img_info['file_name']
 
     def __getitem__(self, index):
         image_id = self.image_infos[index]['id']
-        bboxes = []
-        labels = []
-        image = cv2.imread(self.path + self.image_dict[image_id])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        origin_bboxes = []
+        origin_labels = []
+        origin_image = cv2.imread(self.path + self.image_dict[image_id])
+        origin_image = cv2.cvtColor(origin_image, cv2.COLOR_BGR2RGB)
         for ann in self.anns:
             if ann['image_id'] == image_id:
-                bboxes.append(ann['bbox'])
-                labels.append(ann['category_id'])
+                origin_bboxes.append(ann['bbox'])
+                origin_labels.append(ann['category_id'])
 
-        if self.transform:
-            transformed = self.transform(image=image,bboxes=bboxes,labels=labels)
-
+        transformed = self.transform(image=origin_image,bboxes=origin_bboxes,labels=origin_labels)
+        image = transformed['image']
+        bboxes = transformed['bboxes']
+        labels = transformed['labels']
+        if len(labels)==0:
+            basic_transform = A.Compose([A.Resize(300,300),A.Normalize(mean=0.5, std=0.5)],
+                                   bbox_params=A.BboxParams(format='coco' ,label_fields=['labels']))
+            transformed = basic_transform(image=origin_image,bboxes=origin_bboxes,labels=origin_labels)
             image = transformed['image']
             bboxes = transformed['bboxes']
             labels = transformed['labels']
 
         bboxes = torch.FloatTensor(bboxes)
-        try:
-            output_bboxes = torch.cat((bboxes[:,:2]+bboxes[:,2:]/2,bboxes[:,2:]),1)
-        except IndexError:
-            print("index error")
-            print(bboxes.size())
-        return torch.FloatTensor(image).permute(2,0,1), output_bboxes, torch.LongTensor(labels)
+        bboxes = torch.cat((bboxes[:,:2]+bboxes[:,2:]/2,bboxes[:,2:]),1)
+
+
+        return torch.FloatTensor(image).permute(2,0,1), bboxes, torch.LongTensor(labels)
 
     def __len__(self):
         return len(self.image_dict)
