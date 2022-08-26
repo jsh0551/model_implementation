@@ -2,6 +2,7 @@ import torchvision
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
+device = 'cuda:0' if torch.cuda.is_available else 'cpu'
 
 class CNN_layer(nn.Module):
     def __init__(self, in_channel, out_channel, num_layers):
@@ -164,4 +165,4 @@ class SSD(nn.Module):
         lc,cf = self.conv_to_lc_cf(ft_map1, ft_map2, ft_map3, ft_map4, ft_map5, ft_map6)
 
         return lc,cf
-        
+    

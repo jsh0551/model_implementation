@@ -1,3 +1,5 @@
+from platform import libc_ver
+from typing import overload
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
@@ -66,6 +68,7 @@ def find_IoU(xy1,xy2):
     intersection = find_intersection(xy1, xy2)
     union = area1.unsqueeze(1) + area2.unsqueeze(0) - intersection
     return intersection / union
+
 
 def object_detection(global_predicted_locs, global_predicted_scores, num_classes = 10, min_score = 0.05, max_overlap = 0.45, num_object_limit = 40):
     default_boxes = get_default_boxes()
