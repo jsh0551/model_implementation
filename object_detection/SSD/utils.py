@@ -1,5 +1,4 @@
-from platform import libc_ver
-from typing import overload
+
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
@@ -44,6 +43,7 @@ def cxcy_from_prediction(predicted_loc, default_boxes):
 
 def xy_from_cxcy(cxcy):
     xy = torch.cat([cxcy[:,:2]-cxcy[:,2:]/2, cxcy[:,:2]+cxcy[:,2:]/2], 1)
+    xy = xy.clamp(0,1)
     return xy
 
 def cxcy_from_xy(xy):
@@ -70,7 +70,7 @@ def find_IoU(xy1,xy2):
     return intersection / union
 
 
-def object_detection(global_predicted_locs, global_predicted_scores, num_classes = 10, min_score = 0.05, max_overlap = 0.45, num_object_limit = 40):
+def object_detection(global_predicted_locs, global_predicted_scores, num_classes = 10, min_score = 0.01, max_overlap = 0.45, num_object_limit = 40):
     default_boxes = get_default_boxes()
 
     global_img_boxes = []
@@ -175,15 +175,15 @@ def cal_mAP50(all_img_boxes, all_img_labels, all_img_scores, all_target_boxes, a
                 class_idx = img_labels==c
                 if class_idx.sum().item() == 0:
                     continue
-                class_boxes = img_boxes[class_idx]
+                class_boxes_xy = img_boxes[class_idx]
                 class_scores = img_scores[class_idx]
                 class_target_boxes = target_boxes[target_idx]
 
-                class_boxes_xy = xy_from_cxcy(class_boxes)
                 class_target_boxes_xy = xy_from_cxcy(class_target_boxes)
                 iou, iou_label = find_IoU(class_target_boxes_xy,class_boxes_xy).max(0)
                 sorted_scores, sorted_idx = class_scores.sort(dim=0,descending=True)
                 sorted_iou = iou[sorted_idx]
+                sorted_iou_label = iou_label[sorted_idx]
 
                 gt = len(class_target_boxes)
                 tp = torch.Tensor([0]).to(device)
@@ -192,8 +192,8 @@ def cal_mAP50(all_img_boxes, all_img_labels, all_img_scores, all_target_boxes, a
 
                 for j in range(len(sorted_scores)):
                     count_target_box = check_target_box.sum().item()
-                    target_label = iou_label[j]
-                    check_target_box[target_label] = True
+                    target_obj = sorted_iou_label[j]
+                    check_target_box[target_obj] = True
                     if sorted_iou[j] < 0.5 or check_target_box.sum().item()==count_target_box:
                         fp+=1
                     else:

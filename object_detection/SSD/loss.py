@@ -1,4 +1,4 @@
-from email.policy import default
+
 import torchvision
 import torch.nn as nn
 import torch

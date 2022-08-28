@@ -42,12 +42,8 @@ class SSD_Dataset(Dataset):
         bboxes = transformed['bboxes']
         labels = transformed['labels']
         if len(labels)==0:
-            basic_transform = A.Compose([A.Resize(300,300),A.Normalize(mean=0.5, std=0.5)],
-                                   bbox_params=A.BboxParams(format='coco' ,label_fields=['labels']))
-            transformed = basic_transform(image=origin_image,bboxes=origin_bboxes,labels=origin_labels)
-            image = transformed['image']
-            bboxes = transformed['bboxes']
-            labels = transformed['labels']
+            bboxes = [[0,0,300,300]]
+            labels = [0]
 
         bboxes = torch.FloatTensor(bboxes)
         bboxes = torch.cat((bboxes[:,:2]+bboxes[:,2:]/2,bboxes[:,2:]),1)
