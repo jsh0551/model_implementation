@@ -3,7 +3,7 @@ import torchvision
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from SSD.utils import get_default_boxes, xy_from_cxcy, find_IoU, encoding_from_cxcy, convert_to_ratio
+from .utils import get_default_boxes, xy_from_cxcy, find_IoU, encoding_from_cxcy, convert_to_ratio
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 

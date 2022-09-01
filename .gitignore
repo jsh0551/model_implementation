@@ -2,8 +2,10 @@
 .paper_venv
 가상환경
 */*/__pycache__
+*/__pycache__
 .ipynb_checkpoints
 object_detection/YOLO_v1
+object_detection/YOLO_v2
 coco.ipynb
 practice.ipynb
 base_model/RNN
